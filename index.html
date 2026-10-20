@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Archivio proposte di tesi</title>
+  <link rel="stylesheet" href="css/style.css?v=3">
+  <script src="js/theme.js?v=3"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <h1>Archivio proposte di tesi</h1>
+      <nav>
+        <a href="#/archivio" id="nav-archivio">Archivio</a>
+        <a href="#/nuova" id="nav-nuova">Nuova richiesta</a>
+        <a href="docenti.html">Area docenti</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ARCHIVIO -->
+    <section id="view-archivio">
+      <div id="stats"><p class="meta">Caricamento statistiche…</p></div>
+
+      <h2>Richieste registrate</h2>
+      <p class="meta">L'elenco mostra le richieste in attesa e le tesi approvate. Prima di presentare una proposta controlla che non esista già un progetto simile e che tu non abbia già una richiesta attiva.</p>
+      <div class="filters">
+        <input id="f-text" type="search" placeholder="Cerca per titolo, descrizione o candidato">
+        <select id="f-level">
+          <option value="">Triennale e magistrale</option>
+          <option value="triennale">Solo triennale</option>
+          <option value="magistrale">Solo magistrale</option>
+        </select>
+        <div class="combo">
+          <input id="f-teacher" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="f-teacher-list" aria-label="Filtra per docente" autocomplete="off" placeholder="Tutti i docenti (scrivi per cercare)">
+          <ul id="f-teacher-list" class="combo-list hidden" role="listbox"></ul>
+        </div>
+        <select id="f-session"><option value="">Tutte le sessioni</option></select>
+        <select id="f-status">
+          <option value="">Tutti gli stati</option>
+          <option value="pending">In attesa</option>
+          <option value="approved">Approvata</option>
+        </select>
+      </div>
+      <div id="list"><p class="meta">Caricamento…</p></div>
+    </section>
+
+    <!-- FORM -->
+    <section id="view-nuova" class="hidden">
+      <h2>Nuova richiesta di tesi</h2>
+      <p class="meta">Non serve registrarsi. Email e telefono sono visibili solo al docente scelto e agli amministratori; nome, cognome, descrizione e titolo compaiono nell'archivio pubblico.</p>
+      <form id="form" class="card" novalidate>
+        <div class="row2">
+          <div><label for="first_name">Nome</label><input id="first_name" required maxlength="80" autocomplete="given-name"></div>
+          <div><label for="last_name">Cognome</label><input id="last_name" required maxlength="80" autocomplete="family-name"></div>
+        </div>
+        <div class="row2">
+          <div><label for="matricola">Matricola</label><input id="matricola" required maxlength="15" inputmode="text" autocomplete="off"></div>
+          <div><label for="phone">Telefono</label><input id="phone" type="tel" required maxlength="25" autocomplete="tel"></div>
+        </div>
+        <label for="email">Email</label>
+        <input id="email" type="email" required maxlength="200" autocomplete="email">
+
+        <label for="level">Tipo di tesi</label>
+        <select id="level" required>
+          <option value="">Seleziona…</option>
+          <option value="triennale">Laurea triennale</option>
+          <option value="magistrale">Laurea magistrale</option>
+        </select>
+
+        <div class="row2">
+          <div><label for="teacher-input">Docente</label>
+            <div class="combo">
+              <input id="teacher-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="teacher-list" autocomplete="off" placeholder="Inizia a scrivere il cognome" required>
+              <input id="teacher" type="hidden">
+              <ul id="teacher-list" class="combo-list hidden" role="listbox"></ul>
+            </div>
+            <div class="hint">Scrivi le prime lettere del cognome e scegli dai suggerimenti. I docenti senza posti per il tipo di tesi scelto non sono selezionabili.</div></div>
+          <div><label for="session">Sessione di laurea prevista</label><select id="session" required><option value="">Seleziona…</option></select>
+            <div class="hint">Se i tuoi piani cambiano potrai comunicarlo al docente, che aggiornerà la sessione.</div></div>
+        </div>
+
+        <label for="abstract">Descrizione della richiesta</label>
+        <textarea id="abstract" required minlength="20" maxlength="3000"></textarea>
+        <div class="hint">Presenta l'area di interesse o l'idea di ricerca. Non serve un titolo preciso: il docente lo definirà con te in fase di valutazione. La descrizione è pubblica: non inserire dati sulla tua salute o sulla tua vita sessuale.</div>
+        <div class="hint"><span id="abs-count">0</span>/3000 caratteri</div>
+
+        <label for="title">Titolo provvisorio (facoltativo)</label>
+        <input id="title" minlength="5" maxlength="250">
+        <div class="hint">Se ne hai già uno, indicalo: ti avvisiamo se esiste un titolo simile in archivio.</div>
+        <div id="similar"></div>
+
+        <label for="attachment">Allegato PDF (facoltativo, massimo 5 MB)</label>
+        <input id="attachment" type="file" accept="application/pdf,.pdf">
+        <div class="hint">L'allegato è visibile solo al docente scelto e agli amministratori.</div>
+
+        <!-- campo trappola antispam: deve restare vuoto -->
+        <div class="hp" aria-hidden="true"><label>Sito web<input id="website" tabindex="-1" autocomplete="off"></label></div>
+
+        <label style="font-weight:400">
+          <input type="checkbox" id="privacy" required style="width:auto">
+          Ho letto l'<a href="privacy.html" target="_blank" rel="noopener">informativa sul trattamento dei dati personali</a> e sono consapevole che nome, cognome, descrizione e titolo saranno visibili nell'archivio pubblico.
+        </label>
+        <div class="actions"><button class="btn" id="submit" type="submit">Invia richiesta</button></div>
+      </form>
+      <div id="done" class="notice ok hidden"></div>
+    </section>
+  </main>
+
+  <footer class="wrap" id="footer"></footer>
+  <script type="module" src="js/public.js?v=3"></script>
+</body>
+</html>
