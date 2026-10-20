@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Archivio proposte di tesi</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/theme.js"></script>
 </head>
 <body>
   <header class="top">
@@ -23,7 +24,8 @@
     <section id="view-archivio">
       <div id="stats"><p class="meta">Caricamento statistiche…</p></div>
 
-      <h2>Richieste registrate</h2>
+      <details class="fold fold-section" id="fold-richieste">
+      <summary><h2>Richieste registrate</h2></summary>
       <p class="meta">L'elenco mostra le richieste in attesa e le tesi approvate. Prima di presentare una proposta controlla che non esista già un progetto simile e che tu non abbia già una richiesta attiva.</p>
       <div class="filters">
         <input id="f-text" type="search" placeholder="Cerca per titolo, descrizione o candidato">
@@ -41,6 +43,7 @@
         </select>
       </div>
       <div id="list"><p class="meta">Caricamento…</p></div>
+      </details>
     </section>
 
     <!-- FORM -->
