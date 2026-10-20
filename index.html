@@ -67,15 +67,20 @@
         </select>
 
         <div class="row2">
-          <div><label for="teacher">Docente</label><select id="teacher" required><option value="">Seleziona…</option></select>
-            <div class="hint">I docenti con posti esauriti per il tipo di tesi scelto non sono selezionabili.</div></div>
+          <div><label for="teacher-input">Docente</label>
+            <div class="combo">
+              <input id="teacher-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="teacher-list" autocomplete="off" placeholder="Inizia a scrivere il cognome" required>
+              <input id="teacher" type="hidden">
+              <ul id="teacher-list" class="combo-list hidden" role="listbox"></ul>
+            </div>
+            <div class="hint">Scrivi le prime lettere del cognome e scegli dai suggerimenti. I docenti senza posti per il tipo di tesi scelto non sono selezionabili.</div></div>
           <div><label for="session">Sessione di laurea prevista</label><select id="session" required><option value="">Seleziona…</option></select>
             <div class="hint">Se i tuoi piani cambiano potrai comunicarlo al docente, che aggiornerà la sessione.</div></div>
         </div>
 
         <label for="abstract">Descrizione della richiesta</label>
         <textarea id="abstract" required minlength="20" maxlength="3000"></textarea>
-        <div class="hint">Presenta l'area di interesse o l'idea di ricerca. Non serve un titolo preciso: il docente lo definirà con te in fase di valutazione.</div>
+        <div class="hint">Presenta l'area di interesse o l'idea di ricerca. Non serve un titolo preciso: il docente lo definirà con te in fase di valutazione. La descrizione è pubblica: non inserire dati sulla tua salute o sulla tua vita sessuale.</div>
         <div class="hint"><span id="abs-count">0</span>/3000 caratteri</div>
 
         <label for="title">Titolo provvisorio (facoltativo)</label>
@@ -87,14 +92,12 @@
         <input id="attachment" type="file" accept="application/pdf,.pdf">
         <div class="hint">L'allegato è visibile solo al docente scelto e agli amministratori.</div>
 
-        <div id="turnstile" style="margin-top:12px"></div>
-
         <!-- campo trappola antispam: deve restare vuoto -->
         <div class="hp" aria-hidden="true"><label>Sito web<input id="website" tabindex="-1" autocomplete="off"></label></div>
 
         <label style="font-weight:400">
           <input type="checkbox" id="privacy" required style="width:auto">
-          Ho letto l'informativa sul trattamento dei dati personali e accetto che nome, cognome, descrizione e titolo siano visibili nell'archivio.
+          Ho letto l'<a href="privacy.html" target="_blank" rel="noopener">informativa sul trattamento dei dati personali</a> e sono consapevole che nome, cognome, descrizione e titolo saranno visibili nell'archivio pubblico.
         </label>
         <div class="actions"><button class="btn" id="submit" type="submit">Invia richiesta</button></div>
       </form>

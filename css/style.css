@@ -79,3 +79,18 @@ footer { color: var(--muted); font-size: .85rem; padding: 20px 0 40px; }
 .thesis .head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 4px; }
 .thesis .head h4 { margin: 0; }
 .full { color: var(--bad); font-weight: 700; }
+
+.prose { max-width: 760px; }
+.prose h3 { margin: 22px 0 6px; }
+.prose ul { padding-left: 22px; }
+.todo { background: #fff3bf; color: #5f3b00; padding: 0 4px; border-radius: 4px; }
+@media (prefers-color-scheme: dark) { .todo { background: #5c4a00; color: #ffe58a; } }
+
+/* campo docente con completamento automatico */
+.combo { position: relative; }
+.combo-list { position: absolute; left: 0; right: 0; top: 100%; z-index: 20; margin: 4px 0 0; padding: 4px; list-style: none; max-height: 260px; overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.2); }
+.combo-list li { padding: 8px 10px; border-radius: 6px; cursor: pointer; }
+.combo-list li[aria-selected="true"] { background: var(--accent); color: #fff; }
+.combo-list li.disabled { color: var(--muted); cursor: not-allowed; }
+.combo-list li.empty { color: var(--muted); cursor: default; }
+@media (prefers-color-scheme: dark) { .combo-list li[aria-selected="true"] { color: #0b1220; } }

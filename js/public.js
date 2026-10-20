@@ -1,5 +1,4 @@
 import { sb, esc, $, badge, toast, loadStats, renderStats, uploadPdf, levelBadge, levelSlots } from "./common.js";
-import { TURNSTILE_SITE_KEY } from "./config.js";
 
 let teachers = [];
 let sessions = [];
@@ -82,48 +81,117 @@ function renderList() {
 
 let statsTeachers = [];
 
-// Il docente non è selezionabile se i posti del livello scelto sono esauriti.
-function renderTeacherOptions() {
-  const level = $("#level").value;
-  const current = $("#teacher").value;
-  const first = $("#teacher").options[0];
-  $("#teacher").innerHTML = "";
-  $("#teacher").appendChild(first);
-  for (const t of statsTeachers) {
-    const o = document.createElement("option");
-    o.value = t.id;
-    const full = level ? levelSlots(t, level).full : false;
-    o.textContent = full ? `${t.full_name} (posti esauriti per la tesi ${level})` : t.full_name;
-    o.disabled = full;
-    $("#teacher").appendChild(o);
+// ---------- docente con completamento automatico ----------
+let comboItems = [];
+let comboActive = -1;
+
+const norm = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+// Ogni parola scritta deve essere l'inizio di una parola del nome ("sans" trova "Prof. Andrea Sansone").
+function teacherMatches(t, query) {
+  const words = norm(t.full_name).split(/[^a-z0-9]+/).filter(Boolean);
+  const tokens = norm(query).split(/\s+/).filter(Boolean);
+  return tokens.every((tok) => words.some((w) => w.startsWith(tok)));
+}
+
+function setTeacherValidity() {
+  $("#teacher-input").setCustomValidity($("#teacher").value ? "" : "Seleziona un docente dall'elenco dei suggerimenti.");
+}
+
+function openList(on) {
+  $("#teacher-list").classList.toggle("hidden", !on);
+  $("#teacher-input").setAttribute("aria-expanded", String(on));
+}
+
+function highlight() {
+  document.querySelectorAll("#teacher-list li[role=option]").forEach((li) => li.setAttribute("aria-selected", String(Number(li.dataset.i) === comboActive)));
+  const input = $("#teacher-input");
+  if (comboActive >= 0) {
+    input.setAttribute("aria-activedescendant", `teacher-opt-${comboActive}`);
+    $(`#teacher-opt-${comboActive}`)?.scrollIntoView({ block: "nearest" });
+  } else {
+    input.removeAttribute("aria-activedescendant");
   }
-  $("#teacher").value = [...$("#teacher").options].some((o) => o.value === current && !o.disabled) ? current : "";
+}
+
+function renderTeacherList() {
+  const level = $("#level").value;
+  comboItems = statsTeachers
+    .filter((t) => teacherMatches(t, $("#teacher-input").value))
+    .map((t) => ({ t, full: level ? levelSlots(t, level).full : false }));
+  $("#teacher-list").innerHTML = comboItems.length
+    ? comboItems
+        .map((it, i) => `<li role="option" id="teacher-opt-${i}" data-i="${i}" class="${it.full ? "disabled" : ""}" aria-disabled="${it.full}">${esc(it.t.full_name)}${it.full ? ` <span class="meta">(posti esauriti per la tesi ${esc(level)})</span>` : ""}</li>`)
+        .join("")
+    : `<li class="empty">Nessun docente trovato</li>`;
+  comboActive = comboItems.findIndex((it) => !it.full);
+  highlight();
+}
+
+function selectTeacher(i) {
+  const it = comboItems[i];
+  if (!it || it.full) return;
+  $("#teacher").value = it.t.id;
+  $("#teacher-input").value = it.t.full_name;
+  setTeacherValidity();
+  openList(false);
+}
+
+function moveActive(step) {
+  if (!comboItems.some((it) => !it.full)) return;
+  let i = comboActive;
+  do { i = (i + step + comboItems.length) % comboItems.length; } while (comboItems[i].full);
+  comboActive = i;
+  highlight();
+}
+
+function setupTeacherCombo() {
+  const input = $("#teacher-input");
+  setTeacherValidity();
+  input.addEventListener("focus", () => { renderTeacherList(); openList(true); });
+  input.addEventListener("input", () => {
+    $("#teacher").value = "";   // la scelta vale solo se fatta dai suggerimenti
+    setTeacherValidity();
+    renderTeacherList();
+    openList(true);
+  });
+  input.addEventListener("blur", () => openList(false));
+  input.addEventListener("keydown", (e) => {
+    const open = !$("#teacher-list").classList.contains("hidden");
+    if (e.key === "ArrowDown") { e.preventDefault(); if (!open) { renderTeacherList(); openList(true); } else moveActive(1); }
+    else if (e.key === "ArrowUp" && open) { e.preventDefault(); moveActive(-1); }
+    else if (e.key === "Enter" && open) { e.preventDefault(); selectTeacher(comboActive); }
+    else if (e.key === "Escape" && open) { e.preventDefault(); openList(false); }
+  });
+  // mousedown anziché click: avviene prima che il campo perda il focus
+  $("#teacher-list").addEventListener("mousedown", (e) => {
+    const li = e.target.closest("li[data-i]");
+    e.preventDefault();
+    if (li) selectTeacher(Number(li.dataset.i));
+  });
+}
+
+// Se cambia il tipo di tesi o il numero di posti, una scelta già fatta può non essere più valida.
+function syncTeacherSelection() {
+  const id = $("#teacher").value;
+  if (id) {
+    const t = statsTeachers.find((x) => x.id === id);
+    const level = $("#level").value;
+    if (!t || (level && levelSlots(t, level).full)) {
+      $("#teacher").value = "";
+      $("#teacher-input").value = "";
+      toast("Il docente scelto non ha posti disponibili per questo tipo di tesi: scegline un altro.", "error");
+    }
+  }
+  setTeacherValidity();
+  renderTeacherList();
 }
 
 async function refreshStats() {
   const stats = await loadStats();
   statsTeachers = stats.teachers;
   renderStats($("#stats"), stats);
-  renderTeacherOptions();
-}
-
-// ---------- Turnstile (facoltativo) ----------
-let turnstileWidget = null;
-function setupTurnstile() {
-  if (!TURNSTILE_SITE_KEY) return;
-  const s = document.createElement("script");
-  s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-  s.async = true;
-  s.onload = () => { turnstileWidget = window.turnstile.render("#turnstile", { sitekey: TURNSTILE_SITE_KEY }); };
-  document.head.appendChild(s);
-}
-
-async function errorMessage(error) {
-  try {
-    const body = await error.context.json();
-    if (body?.error) return body.error;
-  } catch { /* nessun corpo leggibile */ }
-  return error.message || "Invio non riuscito.";
+  syncTeacherSelection();
 }
 
 // ---------- form ----------
@@ -174,17 +242,8 @@ async function submitForm(e) {
     p_attachment_path: attachmentPath,
   };
 
-  let errMsg = null;
-  if (TURNSTILE_SITE_KEY) {
-    const token = window.turnstile?.getResponse(turnstileWidget);
-    if (!token) { btn.disabled = false; return toast("Completa la verifica antispam.", "error"); }
-    const { error } = await sb.functions.invoke("submit-thesis", { body: { ...payload, turnstileToken: token } });
-    if (error) errMsg = await errorMessage(error);
-    window.turnstile?.reset(turnstileWidget);
-  } else {
-    const { error } = await sb.rpc("submit_thesis", payload);
-    if (error) errMsg = error.message;
-  }
+  const { error } = await sb.rpc("submit_thesis", payload);
+  const errMsg = error ? error.message : null;
   btn.disabled = false;
 
   if (errMsg) {
@@ -192,6 +251,8 @@ async function submitForm(e) {
     return;
   }
   form.reset();
+  $("#teacher").value = "";
+  setTeacherValidity();
   $("#abs-count").textContent = "0";
   $("#similar").innerHTML = "";
   form.classList.add("hidden");
@@ -208,8 +269,7 @@ async function submitForm(e) {
 // ---------- init ----------
 async function init() {
   route();
-  setupTurnstile();
-  $("#footer").textContent = "I dati di contatto degli studenti sono conservati in un'area riservata e consultabili solo dai docenti interessati e dagli amministratori.";
+  $("#footer").innerHTML = 'I dati di contatto degli studenti sono conservati in un\'area riservata e consultabili solo dai docenti interessati e dagli amministratori. <a href="privacy.html">Informativa privacy</a>';
   try {
     await loadAll();
     fillSelect($("#f-teacher"), teachers, "id", "full_name");
@@ -226,7 +286,8 @@ async function init() {
     $(id).addEventListener("input", renderList);
   }
   $("#title").addEventListener("input", checkSimilar);
-  $("#level").addEventListener("change", renderTeacherOptions);
+  $("#level").addEventListener("change", syncTeacherSelection);
+  setupTeacherCombo();
   $("#abstract").addEventListener("input", () => ($("#abs-count").textContent = $("#abstract").value.length));
   $("#form").addEventListener("submit", submitForm);
   window.addEventListener("hashchange", () => {
