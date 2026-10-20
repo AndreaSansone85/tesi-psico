@@ -114,8 +114,6 @@ details.fold[open] > summary::before { transform: rotate(45deg); }
 details.fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
 details.fold[open] > summary { margin-bottom: 10px; }
 details.fold > summary h2, details.fold > summary h3 { margin: 0; }
-details.fold-section { margin-top: 24px; }
-details.fold-section > summary { font-size: 1.5rem; }
 .grid2 { align-items: start; }
 
 /* interruttore tema chiaro/scuro */

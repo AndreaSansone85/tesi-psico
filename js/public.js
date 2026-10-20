@@ -1,4 +1,4 @@
-import { sb, esc, $, badge, toast, loadStats, renderStats, uploadPdf, levelBadge, levelSlots } from "./common.js";
+import { sb, esc, $, badge, toast, loadStats, renderStats, uploadPdf, levelBadge, levelSlots } from "./common.js?v=3";
 
 let teachers = [];
 let sessions = [];
@@ -46,7 +46,8 @@ function fillSelect(sel, items, valueKey, labelKey) {
 function renderList() {
   const q = $("#f-text").value.trim().toLowerCase();
   const fL = $("#f-level").value;
-  const fT = $("#f-teacher").value;
+  const fT = $("#f-teacher").value.trim();
+  const okTeachers = fT ? new Set(teachers.filter((t) => teacherMatches(t, fT)).map((t) => t.id)) : null;
   const fS = $("#f-session").value;
   const fSt = $("#f-status").value;
   const tName = Object.fromEntries(teachers.map((t) => [t.id, t.full_name]));
@@ -54,7 +55,7 @@ function renderList() {
 
   const rows = theses.filter((t) => {
     if (fL && t.degree_level !== fL) return false;
-    if (fT && t.teacher_id !== fT) return false;
+    if (okTeachers && !okTeachers.has(t.teacher_id)) return false;
     if (fS && String(t.session_id) !== fS) return false;
     if (fSt && t.status !== fSt) return false;
     if (q) {
@@ -90,7 +91,7 @@ const norm = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCa
 // Ogni parola scritta deve essere l'inizio di una parola del nome ("sans" trova "Prof. Andrea Sansone").
 function teacherMatches(t, query) {
   const words = norm(t.full_name).split(/[^a-z0-9]+/).filter(Boolean);
-  const tokens = norm(query).split(/\s+/).filter(Boolean);
+  const tokens = norm(query).split(/[^a-z0-9]+/).filter(Boolean);
   return tokens.every((tok) => words.some((w) => w.startsWith(tok)));
 }
 
@@ -168,6 +169,47 @@ function setupTeacherCombo() {
     const li = e.target.closest("li[data-i]");
     e.preventDefault();
     if (li) selectTeacher(Number(li.dataset.i));
+  });
+}
+
+// Filtro docente nell'archivio: stesso completamento automatico, ma senza obbligo di scelta.
+function setupFilterCombo() {
+  const input = $("#f-teacher"), list = $("#f-teacher-list");
+  let items = [], active = -1;
+  const open = (on) => { list.classList.toggle("hidden", !on); input.setAttribute("aria-expanded", String(on)); };
+  const mark = () => {
+    list.querySelectorAll("li[role=option]").forEach((li) => li.setAttribute("aria-selected", String(Number(li.dataset.i) === active)));
+    if (active >= 0) { input.setAttribute("aria-activedescendant", `f-opt-${active}`); $(`#f-opt-${active}`)?.scrollIntoView({ block: "nearest" }); }
+    else input.removeAttribute("aria-activedescendant");
+  };
+  const render = () => {
+    items = teachers.filter((t) => teacherMatches(t, input.value));
+    list.innerHTML = items.length
+      ? items.map((t, i) => `<li role="option" id="f-opt-${i}" data-i="${i}">${esc(t.full_name)}</li>`).join("")
+      : `<li class="empty">Nessun docente trovato</li>`;
+    active = -1;
+    mark();
+  };
+  const pick = (i) => {
+    if (!items[i]) return;
+    input.value = items[i].full_name;
+    open(false);
+    renderList();
+  };
+  input.addEventListener("focus", () => { render(); open(true); });
+  input.addEventListener("input", () => { render(); open(true); });
+  input.addEventListener("blur", () => open(false));
+  input.addEventListener("keydown", (e) => {
+    const isOpen = !list.classList.contains("hidden");
+    if (e.key === "ArrowDown") { e.preventDefault(); if (!isOpen) { render(); open(true); } else if (items.length) { active = (active + 1) % items.length; mark(); } }
+    else if (e.key === "ArrowUp" && isOpen && items.length) { e.preventDefault(); active = (active - 1 + items.length) % items.length; mark(); }
+    else if (e.key === "Enter" && isOpen && active >= 0) { e.preventDefault(); pick(active); }
+    else if (e.key === "Escape" && isOpen) { e.preventDefault(); open(false); }
+  });
+  list.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    const li = e.target.closest("li[data-i]");
+    if (li) pick(Number(li.dataset.i));
   });
 }
 
@@ -272,7 +314,6 @@ async function init() {
   $("#footer").innerHTML = 'I dati di contatto degli studenti sono conservati in un\'area riservata e consultabili solo dai docenti interessati e dagli amministratori. <a href="privacy.html">Informativa privacy</a>';
   try {
     await loadAll();
-    fillSelect($("#f-teacher"), teachers, "id", "full_name");
     fillSelect($("#f-session"), sessions, "id", "label");
     fillSelect($("#session"), sessions, "id", "label");
     renderList();
@@ -288,6 +329,7 @@ async function init() {
   $("#title").addEventListener("input", checkSimilar);
   $("#level").addEventListener("change", syncTeacherSelection);
   setupTeacherCombo();
+  setupFilterCombo();
   $("#abstract").addEventListener("input", () => ($("#abs-count").textContent = $("#abstract").value.length));
   $("#form").addEventListener("submit", submitForm);
   window.addEventListener("hashchange", () => {

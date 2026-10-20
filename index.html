@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Archivio proposte di tesi</title>
-  <link rel="stylesheet" href="css/style.css">
-  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/style.css?v=3">
+  <script src="js/theme.js?v=3"></script>
 </head>
 <body>
   <header class="top">
@@ -24,8 +24,7 @@
     <section id="view-archivio">
       <div id="stats"><p class="meta">Caricamento statistiche…</p></div>
 
-      <details class="fold fold-section" id="fold-richieste">
-      <summary><h2>Richieste registrate</h2></summary>
+      <h2>Richieste registrate</h2>
       <p class="meta">L'elenco mostra le richieste in attesa e le tesi approvate. Prima di presentare una proposta controlla che non esista già un progetto simile e che tu non abbia già una richiesta attiva.</p>
       <div class="filters">
         <input id="f-text" type="search" placeholder="Cerca per titolo, descrizione o candidato">
@@ -34,7 +33,10 @@
           <option value="triennale">Solo triennale</option>
           <option value="magistrale">Solo magistrale</option>
         </select>
-        <select id="f-teacher"><option value="">Tutti i docenti</option></select>
+        <div class="combo">
+          <input id="f-teacher" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="f-teacher-list" aria-label="Filtra per docente" autocomplete="off" placeholder="Tutti i docenti (scrivi per cercare)">
+          <ul id="f-teacher-list" class="combo-list hidden" role="listbox"></ul>
+        </div>
         <select id="f-session"><option value="">Tutte le sessioni</option></select>
         <select id="f-status">
           <option value="">Tutti gli stati</option>
@@ -43,7 +45,6 @@
         </select>
       </div>
       <div id="list"><p class="meta">Caricamento…</p></div>
-      </details>
     </section>
 
     <!-- FORM -->
@@ -109,6 +110,6 @@
   </main>
 
   <footer class="wrap" id="footer"></footer>
-  <script type="module" src="js/public.js"></script>
+  <script type="module" src="js/public.js?v=3"></script>
 </body>
 </html>

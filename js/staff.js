@@ -1,4 +1,4 @@
-import { sb, esc, $, badge, STATUS_LABEL, toast, loadStats, renderStats, uploadPdf, levelBadge } from "./common.js";
+import { sb, esc, $, badge, STATUS_LABEL, toast, loadStats, renderStats, uploadPdf, levelBadge } from "./common.js?v=3";
 
 let me = null;          // profilo del docente collegato
 let rows = [];          // richieste visibili all'utente (con dati riservati)
